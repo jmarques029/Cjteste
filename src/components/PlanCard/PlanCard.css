@@ -1,0 +1,78 @@
+.plan-card {
+  padding: 40px;
+  width: 100%;
+  max-width: 350px;
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  transition: var(--transition);
+}
+
+.plan-card:hover {
+  transform: translateY(-10px);
+  border-color: var(--accent);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.plan-card.recommended {
+  border-color: var(--primary);
+  box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary);
+  color: white;
+  padding: 4px 16px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+h3 {
+  font-size: 1.5rem;
+  color: var(--text-light);
+}
+
+.speed {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.price {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.amount {
+  font-size: 3rem;
+  font-weight: 800;
+}
+
+.features {
+  list-style: none;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.features li {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  display: flex;
+  gap: 8px;
+}
+
+.check {
+  color: var(--accent);
+  font-weight: bold;
+}
