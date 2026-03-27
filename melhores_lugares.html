@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destinos Exclusivos - Booking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        dark: '#0B0F19',
+                        darker: '#06080D',
+                        primary: '#38bdf8', /* Light blue */
+                        accent: '#818cf8'   /* Indigo */
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0B0F19; /* dark theme */
+            color: #f8fafc;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Hero Animation & Parallax */
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background: url('https://picsum.photos/seed/brazilandscape/1920/1080') center/cover no-repeat;
+            opacity: 0.4;
+            transform: scale(1.1);
+            animation: kenburns 30s infinite alternate linear;
+            z-index: -2;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(11,15,25,0.2) 0%, rgba(11,15,25,1) 100%);
+            z-index: -1;
+        }
+
+        @keyframes kenburns {
+            0% { transform: scale(1.1) translate(0, 0); }
+            100% { transform: scale(1.15) translate(-1%, 2%); }
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Interactive Destination Cards */
+        .dest-card {
+            border-radius: 1.5rem;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            isolation: isolate;
+        }
+
+        .dest-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .dest-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 100%);
+            transition: opacity 0.5s ease;
+            z-index: 1;
+        }
+
+        .dest-card:hover img {
+            transform: scale(1.08) rotate(1deg);
+        }
+
+        .card-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 2rem;
+            z-index: 2;
+            transform: translateY(20px);
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .dest-card:hover .card-content {
+            transform: translateY(0);
+        }
+
+        .card-desc {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0.5rem;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .dest-card:hover .card-desc {
+            max-height: 100px;
+            opacity: 1;
+            margin-top: 1rem;
+        }
+
+        /* Tags */
+        .dest-tag {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            font-family: inherit;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            position: relative;
+            background: #fff;
+            color: #0f172a;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Animations for entrance */
+        .stagger-1 { animation: fadeUp 1s 0.2s forwards; opacity: 0; }
+        .stagger-2 { animation: fadeUp 1s 0.4s forwards; opacity: 0; }
+        .stagger-3 { animation: fadeUp 1s 0.6s forwards; opacity: 0; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hotel Row hover */
+        .hotel-row {
+            transition: all 0.3s ease;
+        }
+        .hotel-row:hover {
+            transform: translateX(10px);
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+    </style>
+</head>
+<body class="antialiased selection:bg-primary selection:text-white">
+
+    <!-- Hero Section -->
+    <header class="relative min-h-[85vh] flex items-center justify-center pt-20 pb-12 overflow-hidden">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        
+        <div class="relative z-10 max-w-6xl mx-auto px-6 w-full">
+            <div class="glass p-1 rounded-full inline-block mb-6 stagger-1">
+                <span class="bg-primary/20 text-primary border border-primary/30 px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide uppercase">
+                    Tendências 2026
+                </span>
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 stagger-2 leading-tight">
+                Descubra os <br/>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Melhores Lugares</span>
+            </h1>
+            
+            <p class="text-slate-300 text-lg md:text-xl max-w-2xl mb-10 stagger-3 leading-relaxed">
+                Navegue pelas acomodações mais bem avaliadas e os destinos mais buscados pelos brasileiros baseados em dados reais de reservas.
+            </p>
+
+            <a href="#destinos" class="btn-primary inline-flex items-center px-8 py-4 rounded-full font-bold text-lg stagger-3">
+                Explorar Destinos
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V3a1 1 0 012 0v9.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-20" id="destinos">
+        
+        <div class="flex items-center justify-between mb-12">
+            <div>
+                <h2 class="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Cidades em Alta</h2>
+                <p class="text-slate-400 text-lg">Os destinos urbanos e praianos mais cobiçados do momento.</p>
+            </div>
+        </div>
+
+        <!-- Bento Grid Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 h-auto md:h-[900px]">
+            
+            <!-- Item 1: São Paulo (Large) -->
+            <div class="dest-card md:col-span-2 md:row-span-2 h-[450px] md:h-full">
+                <img src="https://picsum.photos/seed/saopaulo_city/800/1000" alt="São Paulo">
+                <div class="card-content">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="dest-tag text-xs font-semibold px-3 py-1.5 rounded-full text-white">14.600+ Acomodações</span>
+                        <span class="dest-tag text-xs font-semibold px-3 py-1.5 rounded-full text-white">Urbano</span>
+                    </div>
+                    <h3 class="text-3xl md:text-4xl font-bold text-white">São Paulo, SP</h3>
+                    <p class="card-desc">O centro financeiro e cultural da América Latina. Maior variedade de opções de hospedagem, alta gastronomia internacional e uma vida noturna inigualável que nunca dorme.</p>
+                </div>
+            </div>
+
+            <!-- Item 2: Rio de Janeiro -->
+            <div class="dest-card md:col-span-2 md:row-span-1 h-[400px] md:h-full">
+                <img src="https://picsum.photos/seed/rio_de_janeiro_beach/1000/600" alt="Rio de Janeiro">
+                <div class="card-content">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="dest-tag text-xs font-semibold px-3 py-1.5 rounded-full text-white">13.000+ Acomodações</span>
+                    </div>
+                    <h3 class="text-3xl font-bold text-white">Rio de Janeiro, RJ</h3>
+                    <p class="card-desc">A Cidade Maravilhosa, famosa por suas praias lindíssimas, o Cristo Redentor e a energia única de sua cultura litorânea.</p>
+                </div>
+            </div>
+
+            <!-- Item 3: Salvador -->
+            <div class="dest-card md:col-span-1 md:row-span-1 h-[350px] md:h-full">
+                <img src="https://picsum.photos/seed/salvador_bahia/600/600" alt="Salvador">
+                <div class="card-content">
+                    <h3 class="text-2xl font-bold text-white mb-1">Salvador, BA</h3>
+                    <p class="card-desc text-sm">O coração da cultura afro-brasileira, repleto de história vibrante e praias de tirar o fôlego.</p>
+                </div>
+            </div>
+
+            <!-- Item 4: Curitiba -->
+            <div class="dest-card md:col-span-1 md:row-span-1 h-[350px] md:h-full">
+                <img src="https://picsum.photos/seed/curitiba_parks/600/600" alt="Curitiba">
+                <div class="card-content">
+                    <h3 class="text-2xl font-bold text-white mb-1">Curitiba, PR</h3>
+                    <p class="card-desc text-sm">Referência em planejamento urbano ecológico, ideal para turistas que amam grandes parques e clima ameno.</p>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Exclusive Accommodations List -->
+    <section class="border-t border-slate-800 bg-darker py-24 relative overflow-hidden">
+        
+        <!-- Decoration aura -->
+        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div class="max-w-5xl mx-auto px-6 relative z-10">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Experiências Exclusivas</h2>
+            <p class="text-slate-400 text-lg mb-16">Selecione uma acomodação e viva o melhor luxo nacional com as notas mais altas possíveis.</p>
+
+            <div class="space-y-6">
+                <!-- Hotel 1 -->
+                <div class="glass hotel-row rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 cursor-pointer group">
+                    <img src="https://picsum.photos/seed/luxury_hotel_colline/300/300" alt="Hotel" class="w-full md:w-48 h-48 object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-accent uppercase tracking-wider text-xs font-bold">Resort de Luxo</span>
+                            <div class="flex text-yellow-500">
+                                ★★★★★
+                            </div>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-primary transition-colors">Hotel Colline de France <span class="text-slate-500 font-normal text-lg">· Gramado, RS</span></h3>
+                        <p class="text-slate-400">Classificado constantemente como um dos hotéis mais bem avaliados do mundo inteiro, oferecendo uma autêntica experiência imperial.</p>
+                    </div>
+                    <div class="md:text-right">
+                        <div class="inline-flex flex-col items-center bg-green-500/20 text-green-400 border border-green-500/30 px-6 py-4 rounded-2xl">
+                            <span class="text-3xl font-extrabold">9,9</span>
+                            <span class="text-xs uppercase font-bold mt-1">Excepcional</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hotel 2 -->
+                <div class="glass hotel-row rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 cursor-pointer group">
+                    <img src="https://picsum.photos/seed/historic_hotel_ouro_preto/300/300" alt="Solar do Rosário" class="w-full md:w-48 h-48 object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-accent uppercase tracking-wider text-xs font-bold">Patrimônio Histórico</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-primary transition-colors">Hotel Solar do Rosário <span class="text-slate-500 font-normal text-lg">· Ouro Preto, MG</span></h3>
+                        <p class="text-slate-400">Uma joia arquitetônica imersa no coração barroco de Minas Gerais, onde o luxo moderno encontra o charme do século XIX.</p>
+                    </div>
+                    <div class="md:text-right">
+                        <div class="inline-flex flex-col items-center bg-primary/20 text-primary border border-primary/30 px-6 py-4 rounded-2xl">
+                            <span class="text-3xl font-extrabold">9,1</span>
+                            <span class="text-xs uppercase font-bold mt-1">Fantástico</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hotel 3 -->
+                <div class="glass hotel-row rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 cursor-pointer group">
+                    <img src="https://picsum.photos/seed/castle_itaipava/300/300" alt="Castelo de Itaipava" class="w-full md:w-48 h-48 object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-accent uppercase tracking-wider text-xs font-bold">Experiência Única</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-primary transition-colors">Castelo de Itaipava <span class="text-slate-500 font-normal text-lg">· Itaipava, RJ</span></h3>
+                        <p class="text-slate-400">Desperte a realeza em você. Uma oportunidade singular de se hospedar em um castelo real em meio às belas montanhas da serra fluminense.</p>
+                    </div>
+                    <div class="md:text-right">
+                        <div class="inline-flex flex-col items-center bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 px-6 py-4 rounded-2xl">
+                            <span class="text-xl font-extrabold px-2">Imperdível</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-darker py-12 border-t border-slate-800 text-center text-slate-500">
+        <p class="font-medium tracking-wide">Design by OpenSpec Agent &copy; 2026</p>
+        <p class="text-sm mt-2">Os dados das notas baseiam-se publicamente na plataforma Booking.com e as imagens são ilustrativas.</p>
+    </footer>
+
+</body>
+</html>
