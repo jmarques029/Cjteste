@@ -15,7 +15,7 @@
 
 ## 3. Camada de Casos de Uso (TDD)
 
-- [ ] 3.1 Escrever testes unitários em `tests/use_cases/` mockando contratos de repositórios (ex: ListarPlanos, SolicitarContratacao)
-- [ ] 3.2 Executar testes via Docker e garantir que falhem
-- [ ] 3.3 Implementar os casos de uso em `src/use_cases/`
-- [ ] 3.4 Executar testes via Docker e garantir que passem
+- [x] 3.1 Escrever testes unitários em `tests/use_cases/` mockando contratos de repositórios (ex: ListarPlanos, SolicitarContratacao)
+- [x] 3.2 Executar testes via Docker e garantir que falhem
+- [x] 3.3 Implementar os casos de uso em `src/use_cases/`
+- [x] 3.4 Executar testes via Docker e garantir que passem
