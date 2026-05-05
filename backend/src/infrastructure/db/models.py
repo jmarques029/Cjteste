@@ -1,0 +1,20 @@
+from sqlalchemy import Column, Integer, String, Float
+from src.infrastructure.db.database import Base
+
+class PlanoModel(Base):
+    __tablename__ = "planos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String, index=True)
+    preco = Column(Float)
+    velocidade_mbps = Column(Integer)
+
+
+class ClienteModel(Base):
+    __tablename__ = "clientes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String)
+    email = Column(String, unique=True, index=True)
+    documento = Column(String, unique=True, index=True)
+    documento_url = Column(String, nullable=True) # Caminho do arquivo enviado (Upload)
