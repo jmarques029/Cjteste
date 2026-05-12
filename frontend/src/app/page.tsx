@@ -131,6 +131,9 @@ function PlansSkeleton() {
 export default function HomePage() {
   return (
     <>
+      <div style={{ backgroundColor: '#2563eb', color: '#ffffff', textAlign: 'center', padding: '10px', fontSize: '14px', fontWeight: 'bold' }}>
+        Seja bem vindo
+      </div>
       <Header />
 
       <main>
