@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import PlansGrid from "./PlansGrid";
 import InstallationForm from "./InstallationForm";
 import Header from "./components/Header";
+import ArchitecturePresentation from "./components/ArchitecturePresentation";
+
 
 function HeroSection() {
   return (
@@ -203,6 +205,8 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+      <ArchitecturePresentation />
     </>
   );
 }
+

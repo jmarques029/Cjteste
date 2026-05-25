@@ -2,6 +2,10 @@
 
 import { useState, useEffect, FormEvent, useRef } from "react";
 import UploadField from "./components/UploadField";
+import { useAuth } from "../presentation/hooks/useAuth";
+import { useContratacao, SolicitacaoItem } from "../presentation/hooks/useContratacao";
+import { usePlanos } from "../presentation/hooks/usePlanos";
+import { DomainError } from "../domain/errors/DomainError";
 
 interface ToastState {
   type: "success" | "error" | "loading";
@@ -9,48 +13,31 @@ interface ToastState {
   message: string;
 }
 
-interface Plan {
-  id: number;
-  nome: string;
-  velocidade_mbps: number;
-  preco: number;
-}
+// O(1) dictionary maps for Tailwind styling to optimize performance and remove If/Else complex chains
+const BUTTON_SUBMIT_STYLE = {
+  true: "btn btn-primary btn-full btn-lg opacity-70 cursor-not-allowed",
+  false: "btn btn-primary btn-full btn-lg",
+} as const;
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const BADGE_STATUS_STYLE = {
+  Pendente: "status-badge status-pending",
+  Confirmado: "status-badge status-confirmed",
+  Falhou: "status-badge status-failed",
+} as const;
 
 export default function InstallationForm() {
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const { data: plansList = [] } = usePlanos();
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [documentoUrl, setDocumentoUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Estados de Login
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // Estados de Login e Contratação via Custom Hooks
+  const { isLoggedIn, login, error: loginError, loading: loginLoading, logout } = useAuth();
+  const { solicitacoes, solicitar, isSubmitting } = useContratacao();
+
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [loginLoading, setLoginLoading] = useState(false);
-
-  // Verifica se já está logado
-  useEffect(() => {
-    setIsLoggedIn(!!localStorage.getItem("token"));
-  }, []);
-
-  // Carregar planos para o <select>
-  useEffect(() => {
-    fetch(`${API_URL}/planos/`)
-      .then((r) => r.json())
-      .then((data: Plan[]) => setPlans(data))
-      .catch(() => {
-        setPlans([
-          { id: 1, nome: "Essencial 100", velocidade_mbps: 100, preco: 79.9 },
-          { id: 2, nome: "Turbo 300", velocidade_mbps: 300, preco: 109.9 },
-          { id: 3, nome: "Ultra 600", velocidade_mbps: 600, preco: 149.9 },
-        ]);
-      });
-  }, []);
 
   // Pré-selecionar plano a partir do hash de URL (ex: #contratar?plano_id=2)
   useEffect(() => {
@@ -71,35 +58,26 @@ export default function InstallationForm() {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(t);
     if (t.type !== "loading") {
-      toastTimerRef.current = setTimeout(() => setToast(null), 5000);
+      toastTimerRef.current = setTimeout(() => setToast(null), 6000);
     }
   }
 
+  // Obter lista final de planos com fallback
+  const plans = plansList.length > 0 ? plansList : [
+    { id: 1, nome: "Essencial 100", velocidade_mbps: 100, preco: 79.9 },
+    { id: 2, nome: "Turbo 300", velocidade_mbps: 300, preco: 109.9 },
+    { id: 3, nome: "Ultra 600", velocidade_mbps: 600, preco: 149.9 },
+  ];
+
   async function handleLogin(e: FormEvent) {
     e.preventDefault();
-    setLoginError("");
-    setLoginLoading(true);
-
-    try {
-      const res = await fetch(`${API_URL}/auth/token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ username: loginUsername, password: loginPassword }),
+    const success = await login(loginUsername, loginPassword);
+    if (success) {
+      showToast({
+        type: "success",
+        title: "Login efetuado com sucesso!",
+        message: "Agora você pode prosseguir com a solicitação de instalação.",
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem("token", data.access_token);
-        setIsLoggedIn(true);
-        // Despacha evento para que o Header ou outros componentes percebam o login
-        window.dispatchEvent(new Event("storage"));
-      } else {
-        setLoginError("Usuário ou senha incorretos.");
-      }
-    } catch (err) {
-      setLoginError("Erro de conexão com o servidor.");
-    } finally {
-      setLoginLoading(false);
     }
   }
 
@@ -110,60 +88,56 @@ export default function InstallationForm() {
 
     const planId = parseInt(data.get("plano_id") as string, 10);
     if (!planId) {
-      showToast({ type: "error", title: "Plano não selecionado", message: "Escolha um plano antes de continuar." });
+      showToast({
+        type: "error",
+        title: "Plano não selecionado",
+        message: "Escolha um plano antes de continuar.",
+      });
       return;
     }
 
-    setLoading(true);
-    showToast({ type: "loading", title: "Enviando...", message: "Aguarde enquanto processamos sua solicitação." });
+    const planName = plans.find((p) => p.id === planId)?.nome ?? "Plano";
 
-    const token = localStorage.getItem("token") || "";
+    showToast({
+      type: "loading",
+      title: "Enviando...",
+      message: "Aguarde enquanto validamos os dados no domínio e processamos.",
+    });
 
-    // Montar payload
-    const payload = {
-      plano_id: planId,
-      cliente: {
+    try {
+      // Invoca a contratação via hook de mutação otimista
+      await solicitar({
+        planoId: planId,
+        planoNome: planName,
         nome: data.get("nome") as string,
         email: data.get("email") as string,
         documento: data.get("documento") as string,
-        documento_url: documentoUrl, // Inclui o path do arquivo enviado
-      },
-    };
-
-    try {
-      const headers: HeadersInit = { "Content-Type": "application/json" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      const res = await fetch(`${API_URL}/contratacao/`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload),
+        documentoUrl,
       });
 
-      if (res.ok) {
-        const result = await res.json();
-        showToast({
-          type: "success",
-          title: "Contratação enviada! 🎉",
-          message: result.mensagem ?? "Em breve entraremos em contato para agendar a instalação.",
-        });
-        form.reset();
-        setSelectedPlanId("");
-        setDocumentoUrl(null);
-      } else if (res.status === 422) {
-        const err = await res.json();
+      showToast({
+        type: "success",
+        title: "Contratação enviada! 🎉",
+        message: "Sua contratação foi registrada. Em breve agendaremos sua instalação.",
+      });
+
+      form.reset();
+      setSelectedPlanId("");
+      setDocumentoUrl(null);
+    } catch (err: any) {
+      if (err instanceof DomainError) {
         showToast({
           type: "error",
-          title: "Dados inválidos",
-          message: err.detail?.[0]?.msg ?? "Verifique os campos preenchidos.",
+          title: "Erro de Domínio (Fail-Fast)",
+          message: err.message,
         });
       } else {
-        showToast({ type: "error", title: "Erro no servidor", message: "Tente novamente em alguns instantes." });
+        showToast({
+          type: "error",
+          title: "Falha de Conexão (Rollback)",
+          message: err.message || "Erro ao conectar-se à API externa.",
+        });
       }
-    } catch {
-      showToast({ type: "error", title: "Sem conexão", message: "Não foi possível conectar à API." });
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -219,7 +193,7 @@ export default function InstallationForm() {
         <button
           type="submit"
           disabled={loginLoading}
-          className={`btn btn-primary btn-full btn-lg`}
+          className={BUTTON_SUBMIT_STYLE[String(loginLoading) as "true" | "false"]}
         >
           {loginLoading ? (
             <>
@@ -236,104 +210,154 @@ export default function InstallationForm() {
 
   return (
     <>
-      <form
-        id="installation-form"
-        className="form-section"
-        onSubmit={handleSubmit}
-        aria-label="Formulário de contratação"
-        noValidate
-      >
-        <h2 className="form-title">Solicitar Instalação</h2>
-        <p className="form-subtitle">
-          Preencha seus dados e nossa equipe entrará em contato em até 24 horas.
-        </p>
-
-        <div className="form-notice">
-          <span>🔒</span>
-          Seus dados são protegidos e nunca serão compartilhados.
-        </div>
-
-        <div className="form-grid">
-          {/* Nome completo */}
-          <div className="form-group full">
-            <label htmlFor="nome">Nome completo</label>
-            <input
-              id="nome"
-              name="nome"
-              type="text"
-              placeholder="Seu nome completo"
-              required
-              minLength={3}
-              autoComplete="name"
-            />
-          </div>
-
-          {/* Email */}
-          <div className="form-group">
-            <label htmlFor="email">E-mail</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="voce@email.com"
-              required
-              autoComplete="email"
-            />
-          </div>
-
-          {/* Documento */}
-          <div className="form-group">
-            <label htmlFor="documento">CPF / CNPJ</label>
-            <input
-              id="documento"
-              name="documento"
-              type="text"
-              placeholder="000.000.000-00"
-              required
-            />
-          </div>
-
-          {/* Plano */}
-          <div className="form-group full">
-            <label htmlFor="plano_id">Plano de interesse</label>
-            <select
-              id="plano_id"
-              name="plano_id"
-              required
-              value={selectedPlanId}
-              onChange={(e) => setSelectedPlanId(e.target.value)}
-            >
-              <option value="">Selecione um plano</option>
-              {plans.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nome} — {p.velocidade_mbps} Mbps — R$ {p.preco.toFixed(2).replace(".", ",")}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Upload de Identidade */}
-          <UploadField onUploadSuccess={(path) => setDocumentoUrl(path)} />
-        </div>
-
-        <br />
-
-        <button
-          id="btn-submit-form"
-          type="submit"
-          disabled={loading}
-          className={`btn btn-primary btn-full btn-lg`}
+      <div className="installation-layout">
+        <form
+          id="installation-form"
+          className="form-section"
+          onSubmit={handleSubmit}
+          aria-label="Formulário de contratação"
+          noValidate
         >
-          {loading ? (
-            <>
-              <span className="spinner" aria-hidden="true" />
-              Enviando...
-            </>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h2 className="form-title">Solicitar Instalação</h2>
+            <button
+              type="button"
+              onClick={logout}
+              className="btn btn-ghost btn-sm"
+              style={{ fontSize: "12px", border: "1px solid #3f3f46" }}
+            >
+              Sair da Conta 🚪
+            </button>
+          </div>
+          <p className="form-subtitle">
+            Preencha seus dados e nossa equipe entrará em contato em até 24 horas.
+          </p>
+
+          <div className="form-notice">
+            <span>🔒</span>
+            Seus dados são protegidos e nunca serão compartilhados.
+          </div>
+
+          <div className="form-grid">
+            {/* Nome completo */}
+            <div className="form-group full">
+              <label htmlFor="nome">Nome completo</label>
+              <input
+                id="nome"
+                name="nome"
+                type="text"
+                placeholder="Seu nome completo"
+                required
+                minLength={3}
+                autoComplete="name"
+              />
+            </div>
+
+            {/* Email */}
+            <div className="form-group">
+              <label htmlFor="email">E-mail</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="voce@email.com"
+                required
+                autoComplete="email"
+              />
+            </div>
+
+            {/* Documento */}
+            <div className="form-group">
+              <label htmlFor="documento">CPF / CNPJ</label>
+              <input
+                id="documento"
+                name="documento"
+                type="text"
+                placeholder="000.000.000-00 ou CNPJ"
+                required
+              />
+            </div>
+
+            {/* Plano */}
+            <div className="form-group full">
+              <label htmlFor="plano_id">Plano de interesse</label>
+              <select
+                id="plano_id"
+                name="plano_id"
+                required
+                value={selectedPlanId}
+                onChange={(e) => setSelectedPlanId(e.target.value)}
+              >
+                <option value="">Selecione um plano</option>
+                {plans.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nome} — {p.velocidade_mbps} Mbps — R$ {p.preco.toFixed(2).replace(".", ",")}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Upload de Identidade */}
+            <UploadField onUploadSuccess={(path) => setDocumentoUrl(path)} />
+          </div>
+
+          <br />
+
+          <button
+            id="btn-submit-form"
+            type="submit"
+            disabled={isSubmitting}
+            className={BUTTON_SUBMIT_STYLE[String(isSubmitting) as "true" | "false"]}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="spinner" aria-hidden="true" />
+                Enviando...
+              </>
+            ) : (
+              "Solicitar Instalação →"
+            )}
+          </button>
+        </form>
+
+        {/* Dashboard de Solicitações Recentes (B2B Dashboard) para demonstrar Atualizações Otimistas e Rollback */}
+        <div className="solicitacoes-recentes-container" style={{ marginTop: "30px" }}>
+          <h3 className="solicitacoes-title">
+            📋 Minhas Solicitações Recentes
+            <span className="badge-b2b">Offline LocalStorage Cache</span>
+          </h3>
+          <p className="solicitacoes-subtitle">
+            Acompanhe o estado de suas contratações de forma instantânea.
+          </p>
+
+          {solicitacoes.length === 0 ? (
+            <div className="solicitacoes-empty">
+              Nenhuma solicitação realizada neste navegador ainda.
+            </div>
           ) : (
-            "Solicitar Instalação →"
+            <div className="solicitacoes-list" role="list">
+              {solicitacoes.map((item) => (
+                <div key={item.id} className="solicitacao-card" role="listitem">
+                  <div className="solicitacao-header">
+                    <span className="solicitacao-plano">{item.planoNome}</span>
+                    <span className={BADGE_STATUS_STYLE[item.status]}>
+                      {item.status === "Pendente" && <span className="mini-spinner" />}
+                      {item.status}
+                    </span>
+                  </div>
+                  <div className="solicitacao-body">
+                    <div><strong>Cliente:</strong> {item.nome}</div>
+                    <div><strong>Doc:</strong> {item.documento}</div>
+                  </div>
+                  <div className="solicitacao-footer">
+                    <span>Enviado às: {item.timestamp}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
-        </button>
-      </form>
+        </div>
+      </div>
 
       {/* Toast */}
       {toast && (

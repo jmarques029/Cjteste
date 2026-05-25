@@ -1,10 +1,4 @@
-// Componente Server — renderiza card individual de plano
-interface Plan {
-  id: number;
-  nome: string;
-  preco: number;
-  velocidade_mbps: number;
-}
+import { Plan } from "../domain/repositories/IContratacaoRepository";
 
 interface PlanCardProps {
   plan: Plan;
@@ -18,19 +12,35 @@ const PLAN_FEATURES = [
   "Suporte técnico 24h",
 ];
 
+// O(1) dictionary style maps to eliminate complex If/Else or ternary logic
+const CARD_FEATURED_STYLE = {
+  true: "plan-card featured",
+  false: "plan-card",
+} as const;
+
+const BUTTON_FEATURED_STYLE = {
+  true: "btn btn-full btn-primary",
+  false: "btn btn-full btn-outline",
+} as const;
+
 function getSpeedLabel(speed: number): string {
-  if (speed >= 1000) return `${speed / 1000} Gbps`;
-  return `${speed} Mbps`;
+  return speed >= 1000 ? `${speed / 1000} Gbps` : `${speed} Mbps`;
 }
 
-function getBadgeLabel(plan: { nome: string; velocidade_mbps: number }): string {
-  if (plan.velocidade_mbps >= 500) return "⚡ Alta Performance";
-  if (plan.velocidade_mbps >= 200) return "🚀 Mais Vendido";
-  return "✅ Inicial";
+function getBadgeLabel(speed: number): string {
+  // Constant time style key lookup
+  const category = speed >= 500 ? "high" : speed >= 200 ? "medium" : "low";
+  const BADGE_MAP = {
+    high: "⚡ Alta Performance",
+    medium: "🚀 Mais Vendido",
+    low: "✅ Inicial",
+  } as const;
+  return BADGE_MAP[category];
 }
 
-export default function PlanCard({ plan, featured }: PlanCardProps) {
-  const cardClass = `plan-card${featured ? " featured" : ""}`;
+export default function PlanCard({ plan, featured = false }: PlanCardProps) {
+  const cardClass = CARD_FEATURED_STYLE[String(featured) as "true" | "false"];
+  const buttonClass = BUTTON_FEATURED_STYLE[String(featured) as "true" | "false"];
   const priceInt = Math.floor(plan.preco);
   const priceCents = Math.round((plan.preco - priceInt) * 100)
     .toString()
@@ -38,7 +48,7 @@ export default function PlanCard({ plan, featured }: PlanCardProps) {
 
   return (
     <article className={cardClass} id={`plan-card-${plan.id}`}>
-      <div className="plan-badge">{getBadgeLabel(plan)}</div>
+      <div className="plan-badge">{getBadgeLabel(plan.velocidade_mbps)}</div>
 
       <h3 className="plan-name">{plan.nome}</h3>
       <p className="plan-description">
@@ -70,10 +80,9 @@ export default function PlanCard({ plan, featured }: PlanCardProps) {
         ))}
       </ul>
 
-      {/* anchor scrolls to the form section */}
       <a
         href={`#contratar?plano_id=${plan.id}&nome=${encodeURIComponent(plan.nome)}`}
-        className={`btn btn-full ${featured ? "btn-primary" : "btn-outline"}`}
+        className={buttonClass}
         id={`btn-contratar-${plan.id}`}
         aria-label={`Contratar plano ${plan.nome}`}
       >
