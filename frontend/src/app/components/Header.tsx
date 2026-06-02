@@ -39,9 +39,10 @@ export default function Header() {
               </a>
 
               <ul className="nav-links" role="list">
-                <li><a href="#vantagens">Vantagens</a></li>
-                <li><a href="#planos">Planos</a></li>
-                <li><a href="#contratar">Contratar</a></li>
+                <li><a href="/#vantagens">Vantagens</a></li>
+                <li><a href="/#planos">Planos</a></li>
+                <li><a href="/#contratar">Contratar</a></li>
+                <li><a href="/cadastro">Cadastre-se</a></li>
                 {isLoggedIn ? (
                    <li><button onClick={handleLogout} className="text-gray-400 hover:text-white transition-colors" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500 }}>Sair</button></li>
                 ) : (

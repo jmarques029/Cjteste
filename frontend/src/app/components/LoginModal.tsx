@@ -102,7 +102,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-400">
-          Ainda não é cliente? <a href="#planos" onClick={onClose} className="text-[#6366f1] hover:underline">Ver planos</a>
+          Ainda não é cliente?{" "}
+          <a href="/cadastro" onClick={onClose} className="text-[#6366f1] hover:underline">Cadastre-se</a>
+          {" ou "}
+          <a href="#planos" onClick={onClose} className="text-[#6366f1] hover:underline">Ver planos</a>
         </p>
       </div>
     </div>
