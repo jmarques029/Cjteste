@@ -41,7 +41,8 @@ export function useContratacao() {
   const mutation = useMutation<
     { status: string; cliente_id: number; mensagem: string },
     Error,
-    { planoId: number; planoNome: string; nome: string; email: string; documento: string; documentoUrl: string | null }
+    { planoId: number; planoNome: string; nome: string; email: string; documento: string; documentoUrl: string | null },
+    { previousRequests: SolicitacaoItem[] }
   >({
     mutationFn: async (variables) => {
       const token = BrowserStorage.getToken() ?? undefined;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import LoginModal from "./LoginModal";
+import { BrowserStorage } from "../../infrastructure/storage/BrowserStorage";
 
 export default function Header() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -9,8 +10,7 @@ export default function Header() {
 
   useEffect(() => {
     const checkToken = () => {
-      const token = localStorage.getItem("token");
-      setIsLoggedIn(!!token);
+      setIsLoggedIn(!!BrowserStorage.getToken());
     };
 
     checkToken();
@@ -22,7 +22,7 @@ export default function Header() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    BrowserStorage.removeToken();
     setIsLoggedIn(false);
     window.location.reload();
   };

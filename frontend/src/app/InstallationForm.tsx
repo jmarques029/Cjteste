@@ -62,12 +62,7 @@ export default function InstallationForm() {
     }
   }
 
-  // Obter lista final de planos com fallback
-  const plans = plansList.length > 0 ? plansList : [
-    { id: 1, nome: "Essencial 100", velocidade_mbps: 100, preco: 79.9 },
-    { id: 2, nome: "Turbo 300", velocidade_mbps: 300, preco: 109.9 },
-    { id: 3, nome: "Ultra 600", velocidade_mbps: 600, preco: 149.9 },
-  ];
+  const plans = plansList;
 
   async function handleLogin(e: FormEvent) {
     e.preventDefault();

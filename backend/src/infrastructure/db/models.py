@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Float, Integer, String
+
 from src.infrastructure.db.database import Base
+
 
 class PlanoModel(Base):
     __tablename__ = "planos"
@@ -17,4 +19,4 @@ class ClienteModel(Base):
     nome = Column(String)
     email = Column(String, unique=True, index=True)
     documento = Column(String, unique=True, index=True)
-    documento_url = Column(String, nullable=True) # Caminho do arquivo enviado (Upload)
+    documento_url = Column(String, nullable=True)  # Caminho do arquivo enviado (Upload)

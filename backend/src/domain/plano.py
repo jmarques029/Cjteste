@@ -1,5 +1,6 @@
 from pydantic import BaseModel, field_validator
 
+
 class Plano(BaseModel):
     id: int
     nome: str

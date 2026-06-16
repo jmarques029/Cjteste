@@ -1,6 +1,7 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-import os
 
 # Uso do postgres no container por padrão, ou sqlite em testes locais.
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")

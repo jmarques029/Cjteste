@@ -54,7 +54,7 @@ describe('LoginModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /entrar/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/usuário ou senha incorretos/i)).toBeInTheDocument()
+      expect(screen.getByText(/incorrect username or password/i)).toBeInTheDocument()
       expect(localStorage.getItem('token')).toBeNull()
     })
   })

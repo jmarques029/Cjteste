@@ -1,47 +1,25 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { useAuth } from "../../presentation/hooks/useAuth";
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { login, loading, error: authError } = useAuth();
 
   if (!isOpen) return null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const res = await fetch(`${API_URL}/auth/token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ username, password }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem("token", data.access_token);
-        onClose();
-        // Recarregar para atualizar estado global (ou usar um context se fosse prod real)
-        window.location.reload();
-      } else {
-        setError("Usuário ou senha incorretos.");
-      }
-    } catch (err) {
-      setError("Erro de conexão com o servidor.");
-    } finally {
-      setLoading(false);
+    const success = await login(username, password);
+    if (success) {
+      onClose();
     }
   }
 
@@ -86,9 +64,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             />
           </div>
 
-          {error && (
+          {authError && (
             <div className="text-red-400 text-sm font-medium p-3 bg-red-400/10 border border-red-400/20 rounded-lg">
-              {error}
+              {authError}
             </div>
           )}
 

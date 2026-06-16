@@ -34,16 +34,13 @@ describe("PlansGrid", () => {
     expect(article).toHaveClass("featured");
   });
 
-  it("deve renderizar planos de fallback caso a API falhe", async () => {
+  it("deve exibir mensagem de erro quando a API falha", async () => {
     (fetch as any).mockRejectedValueOnce(new Error("Network error"));
 
     renderWithProviders(<PlansGrid />);
 
     await waitFor(() => {
-      // Planos de fallback renderizados quando der erro
-      expect(screen.getByText("Essencial 100")).toBeInTheDocument();
-      expect(screen.getByText("Turbo 300")).toBeInTheDocument();
-      expect(screen.getByText("Ultra 600")).toBeInTheDocument();
+      expect(screen.getByText("Nenhum plano disponível no momento.")).toBeInTheDocument();
     });
   });
 });

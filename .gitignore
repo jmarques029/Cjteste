@@ -23,6 +23,23 @@ lerna-debug.log*
 # Environment variables
 .env
 *.local
+
+# Generated artifact files
+*.txt
+*.db
+*.sqlite3
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Uploads
+uploads/
 .env.development.local
 .env.test.local
 .env.production.local
