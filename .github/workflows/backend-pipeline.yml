@@ -79,7 +79,3 @@ jobs:
           push: true
           tags: matheuscanaverde/cjnet-backend:latest
           
-      - name: Trigger Render Backend Deploy
-        if: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK != '' }}
-        run: |
-          curl -f -X POST "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}"
