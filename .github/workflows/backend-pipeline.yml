@@ -77,10 +77,8 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/cjnet-backend:latest
-            ${{ secrets.DOCKER_USERNAME }}/cjnet-backend:${{ github.sha }}
-
+          tags: matheuscanaverde/cjnet-backend:latest
+          
       - name: Trigger Render Backend Deploy
         if: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK != '' }}
         run: |
