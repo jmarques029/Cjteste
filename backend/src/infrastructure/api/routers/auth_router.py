@@ -88,7 +88,7 @@ def login_for_access_token(
         if (
             not cliente
             or not cliente.senha_hash
-            or not verify_password(form_data.password, cliente.senha_hash)
+            or not verify_password(form_data.password, str(cliente.senha_hash))
         ):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
