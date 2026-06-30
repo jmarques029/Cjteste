@@ -4,7 +4,7 @@ import PlanCard from "./PlanCard";
 import { usePlanos } from "../presentation/hooks/usePlanos";
 
 export default function PlansGrid() {
-  const { data: plans, isLoading, isError } = usePlanos();
+  const { data: plans, isLoading, isError, refetch } = usePlanos();
 
   if (isLoading) {
     return (
@@ -26,9 +26,17 @@ export default function PlansGrid() {
 
   if (isError || !plans || plans.length === 0) {
     return (
-      <div className="plans-grid">
+      <div className="plans-grid" style={{ gridTemplateColumns: "1fr" }}>
         <div className="plan-card" style={{ textAlign: "center", padding: "40px", color: "#a0a0be" }}>
-          <p>Nenhum plano disponível no momento.</p>
+          <p style={{ marginBottom: "20px" }}>Nenhum plano disponível no momento.</p>
+          <button
+            onClick={() => refetch()}
+            className="btn btn-outline"
+            style={{ margin: "0 auto", display: "inline-flex", cursor: "pointer" }}
+            id="btn-retry-plans"
+          >
+            🔄 Tentar Novamente
+          </button>
         </div>
       </div>
     );

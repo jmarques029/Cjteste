@@ -33,3 +33,22 @@ class ContratacaoResponse(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class EnderecoSchema(BaseModel):
+    cep: str
+    logradouro: str
+    numero: str
+    complemento: Optional[str] = None
+    bairro: str
+    cidade: str
+    estado: str
+
+
+class ClienteRegister(BaseModel):
+    nome: str
+    email: EmailStr
+    documento: str
+    telefone: str
+    senha: str
+    endereco: EnderecoSchema

@@ -43,4 +43,31 @@ describe("PlansGrid", () => {
       expect(screen.getByText("Nenhum plano disponível no momento.")).toBeInTheDocument();
     });
   });
+
+  it("deve permitir tentar novamente quando a API falha", async () => {
+    (fetch as any)
+      .mockRejectedValueOnce(new Error("Network error"))
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{ id: 1, nome: "Plano Recuperado", preco: 80.0, velocidade_mbps: 200 }],
+      });
+
+    renderWithProviders(<PlansGrid />);
+
+    // Wait for error view
+    await waitFor(() => {
+      expect(screen.getByText("Nenhum plano disponível no momento.")).toBeInTheDocument();
+    });
+
+    const retryButton = screen.getByRole("button", { name: /Tentar Novamente/i });
+    expect(retryButton).toBeInTheDocument();
+
+    // Click retry
+    retryButton.click();
+
+    // Wait for refetch
+    await waitFor(() => {
+      expect(screen.getByText("Plano Recuperado")).toBeInTheDocument();
+    });
+  });
 });

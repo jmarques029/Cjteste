@@ -66,3 +66,45 @@ def test_upload_arquivo(client):
     response = client.post("/upload/", files={"file": arquivo_test})
     assert response.status_code == 200
     assert "salvo com sucesso" in response.json()["info"]
+
+
+def test_cliente_cadastro_e_login(client):
+    payload = {
+        "nome": "Cliente Teste",
+        "email": "cliente@teste.com",
+        "documento": "12345678901",
+        "telefone": "11999999999",
+        "senha": "password123",
+        "endereco": {
+            "cep": "12345-678",
+            "logradouro": "Rua das Flores",
+            "numero": "123",
+            "complemento": "Apto 42",
+            "bairro": "Centro",
+            "cidade": "São Paulo",
+            "estado": "SP"
+        }
+    }
+    
+    # Register client
+    response = client.post("/auth/register", json=payload)
+    assert response.status_code == 201
+    assert response.json()["status"] == "sucesso"
+    
+    # Login with email
+    response_login = client.post(
+        "/auth/token", data={"username": "cliente@teste.com", "password": "password123"}
+    )
+    assert response_login.status_code == 200
+    assert "access_token" in response_login.json()
+    
+    # Login with document
+    response_login2 = client.post(
+        "/auth/token", data={"username": "12345678901", "password": "password123"}
+    )
+    assert response_login2.status_code == 200
+    assert "access_token" in response_login2.json()
+    
+    # Duplicate registration should fail
+    response_dup = client.post("/auth/register", json=payload)
+    assert response_dup.status_code == 400

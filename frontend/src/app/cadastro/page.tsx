@@ -1,30 +1,10 @@
 import CadastroForm from "../components/CadastroForm";
+import Header from "../components/Header";
 
 export default function CadastroPage() {
   return (
     <>
-      <header>
-        <nav className="navbar" role="navigation" aria-label="Menu principal">
-          <div className="container">
-            <div className="navbar-inner">
-              <a href="/" className="logo" aria-label="CJnet — Página inicial">
-                <span className="logo-icon" aria-hidden="true">🌐</span>
-                CJnet
-              </a>
-
-              <ul className="nav-links" role="list">
-                <li><a href="/#vantagens">Vantagens</a></li>
-                <li><a href="/#planos">Planos</a></li>
-                <li><a href="/#contratar">Contratar</a></li>
-              </ul>
-
-              <a href="/" className="btn btn-outline btn-lg">
-                Entrar
-              </a>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Header />
 
       <main>
         <section className="section" aria-label="Formulário de cadastro">
